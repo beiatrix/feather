@@ -178,5 +178,5 @@
   };
 
   app.updateForecastCard(injectedForecast)
-
+  console.log('hi')
 })();
