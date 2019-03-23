@@ -77,27 +77,6 @@
     app.toggleAddDialog(false);
   });
 
-  // Event listener to get content on screen
-  document.addEventListener('DOMContentLoaded', function () {
-    window.localforage.getItem('selectedCities', function(err, cityList) {
-      if (cityList) {
-        app.selectedCities = cityList
-        app.selectedCities.forEach(function(city) {
-          app.getForecast(city.key, city.label)
-        })
-      }
-      else {
-        app.updateForecastCard(injectedForecast)
-        app.selectedCities = [{
-            key: injectedForecast.key,
-          label: injectedForecast.label
-        }]
-        app.saveSelectedCities()
-      }
-    })
-  })
-
-
   /*****************************************************************************
    *
    * Methods to update/refresh the UI
@@ -202,6 +181,33 @@
     window.localforage.setItem('selectedCities', app.selectedCities)
   }
 
-  app.updateForecastCard(injectedForecast)
+  // Event listener to get content on screen
+  document.addEventListener('DOMContentLoaded', function () {
+    window.localforage.getItem('selectedCities', function(err, cityList) {
+      if (cityList) {
+        app.selectedCities = cityList
+        app.selectedCities.forEach(function(city) {
+          app.getForecast(city.key, city.label)
+        })
+      }
+      else {
+        app.updateForecastCard(injectedForecast)
+        app.selectedCities = [{
+            key: injectedForecast.key,
+          label: injectedForecast.label
+        }]
+        app.saveSelectedCities()
+      }
+    })
+  })
+
+  // check to see if service workers are supported
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then(function() {
+        console.log('Service Worker Registered')
+      })
+  }
 
 })();
