@@ -153,6 +153,19 @@
   // Gets a forecast for a specific city and update the card with the data
   app.getForecast = function(key, label) {
     var url = weatherAPIUrlBase + key + '.json';
+    // Cache then network strategy
+    // Feature detect the caches object
+    if ('caches' in window) {
+      caches.match(url).then(function(response) {
+        if (response) {
+          response.json().then(function(json) {
+            json.key = key
+            json.label = label
+            app.updateForecastCard(json)
+          })
+        }
+      })
+    }
     // Make the XHR to get the data, then update the card
     var request = new XMLHttpRequest();
     request.onreadystatechange = function() {
@@ -202,6 +215,7 @@
   })
 
   // check to see if service workers are supported
+  // if they are, registers service worker if service worker is available in browser - in root directory
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('/service-worker.js')
