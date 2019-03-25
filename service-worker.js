@@ -1,4 +1,8 @@
-var cacheName = 'weatherPWA-v1';
+import { version } from 'react';
+
+var cacheName = 'weatherPWA-v2';
+var dataCacheName = 'weatherData-v2'
+
 var filesToCache = [
   '/',
   '/index.html',
@@ -37,7 +41,7 @@ self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keyList) {
       return Promise.all(keyList.map(function(key) {
-        if (key !== cacheName) {
+        if (key !== cacheName && key !== dataCacheName) {
           console.log('[ServiceWorker] Removing old cache', key)
           return caches.delete(key)
         }
@@ -48,10 +52,27 @@ self.addEventListener('activate', function(e) {
 
 // tries to get data from cache, but if not, gets it from the network
 self.addEventListener('fetch', function(e) {
-  console.log('[ServiceWorker] Fetch', e.request.url)
-  e.respondWith(
-    caches.match(e.request).then(function(response) {
-      return response || fetch(e.request)
-    })
-  )
+  if (e.request.url.startsWith(weatherAPIUrlBase)) {
+    e.respondWith(
+      // fetch data
+      fetch(e.request)
+      .then(function(response) {
+        // clone response, put into cache
+        return caches.open(dataCacheName).then(function(cache) {
+          cache.put(e.request.url, response.clone())
+          console.log('[ServiceWorker] Fetched & Cached', e.request.url)
+          // return response
+          return response
+        })
+      })
+    )
+  } else {
+    e.respondWith(
+      caches.match(e.request).then(function(response) {
+        console.log('[ServiceWorker] Fetch Only', e.request.url)
+        // if in cache, return cache version, otherwise get from the network
+        return response || fetch(e.request)
+      })
+    )
+  }
 })
